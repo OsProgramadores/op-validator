@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	validatePath = "/check"
+	// Path for the result checker handler.
+	checkPath = "/check"
 )
 
 var (
@@ -27,7 +28,7 @@ type Challenge struct {
 
 // Page holds values to be passed to the page templates.
 type Page struct {
-	ValidateURL string
+	CheckURL string
 
 	// Completed Challenges.
 	Challenges []Challenge
@@ -46,9 +47,9 @@ func (x *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// validateHandler validates the incoming request and returns a JSON
+// checkHandler validates the incoming request and returns a JSON
 // struct containing the validation status and the token, if valid.
-func (x *Server) validateHandler(w http.ResponseWriter, r *http.Request) {
+func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
 	challengeID := r.PostFormValue("challenge_id")
 	username := r.PostFormValue("username")
 	solution := r.PostFormValue("solution")
@@ -92,7 +93,7 @@ func main() {
 	srv := &Server{
 		page: Page{
 			// This is the full location where XMLHttpRequests will be sent.
-			ValidateURL: fmt.Sprintf("%s%s/", *optURL, validatePath),
+			CheckURL: fmt.Sprintf("%s%s/", *optURL, checkPath),
 			Challenges: []Challenge{
 				{Name: "desafio-01"},
 				{Name: "desafio-02"},
@@ -107,11 +108,10 @@ func main() {
 	}
 
 	log.Printf("Serving on port %d, using XML URL %q", *optPort, *optURL)
-	log.Printf("path is %q", u.EscapedPath())
 
 	// Handlers paths MUST end in /
 	http.HandleFunc(u.EscapedPath()+"/", srv.rootHandler)
-	http.HandleFunc(validatePath+"/", srv.validateHandler)
+	http.HandleFunc(u.EscapedPath()+checkPath+"/", srv.checkHandler)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *optPort), nil))
 }
