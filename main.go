@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"text/template"
 )
@@ -21,17 +22,12 @@ var (
 	rootTemplate = template.Must(template.ParseFiles("templates/validate.html"))
 )
 
-// Challenge holds information about a completed challenge.
-type Challenge struct {
-	Name string
-}
-
 // Page holds values to be passed to the page templates.
 type Page struct {
 	CheckURL string
 
 	// Completed Challenges.
-	Challenges []Challenge
+	Results []Result
 }
 
 // Server holds database and other information about this server.
@@ -78,9 +74,20 @@ func trimSlash(s string) string {
 }
 
 func main() {
-	optURL := flag.String("base-url", "", "Base URL for the XMLHttpRequests (from JS).")
+	optConfig := flag.String("config", "config/op-validator.toml", "Config file name.")
 	optPort := flag.Int("port", 40000, "HTTP server port to listen on.")
+	optURL := flag.String("base-url", "", "Base URL for the XMLHttpRequests (from JS).")
 	flag.Parse()
+
+	// Open and parse config file.
+	r, err := os.Open(*optConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	config, err := parseConfig(r)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Remove any extra slashes from the base URL, making processing consistent.
 	*optURL = trimSlash(*optURL)
@@ -94,16 +101,7 @@ func main() {
 		page: Page{
 			// This is the full location where XMLHttpRequests will be sent.
 			CheckURL: fmt.Sprintf("%s%s/", *optURL, checkPath),
-			Challenges: []Challenge{
-				{Name: "desafio-01"},
-				{Name: "desafio-02"},
-				{Name: "desafio-03"},
-				{Name: "desafio-04"},
-				{Name: "desafio-05"},
-				{Name: "desafio-06"},
-				{Name: "desafio-07"},
-				{Name: "desafio-08"},
-			},
+			Results:  config.Results,
 		},
 	}
 

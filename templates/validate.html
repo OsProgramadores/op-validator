@@ -34,7 +34,7 @@
           <div class="col mb-3">
             <label for="challenge_id">Desafio</label>
             <select class="form-control" id="challenge_id">
-              {{ range .Challenges }}
+              {{ range .Results }}
                 <option>{{ .Name }}</option>
               {{ end }}
             </select>
