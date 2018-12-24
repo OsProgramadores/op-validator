@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Validação de desafios - Osprogramadores.com</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
+</head>
+<body>
+  <div class="container">
+    <div class="col-md-10 col-lg-10">
+      <div class="pb-2 mt-4 mb-2 border-bottom">
+        <h1>Validação de desafios</h1>
+      </div>
+
+      <h2>Bem vindo</h2>
+      <p>Você está na página de validação de desafios do site <a href="https://osprogramadores.com">osprogramadores.com</a>.
+      A partir do desafio-08, todos os desafios serão validados por este site. O processo de validação é simples: Escolha o
+      desafio desejado, digite o seu usuário no github e faça um paste do resultado do seu programa. O programa fará a verificação
+      do seu resultado e em caso positivo, dará mais instruções sobre como enviar o seu PR.
+      <p>
+      Lembre-se de que apenas os desafios submetidos contam para os <a href="https://osprogramadores.com/scores/">Hi Scores</a>!
+      <p>
+      Boa sorte! Em caso de dificuldade, sinta-se a vontade para pedir ajuda no nosso <a href="https://t.me/OsProgramadores">
+      Grupo no Telegram</a>.
+      <p>
+
+      <hr>
+
+      <!-- note: return false after the function call above is needed to avoid a refresh -->
+      <form class="needs-validation" onsubmit="validateChallenge(this); return false" novalidate>
+        <div class="form-row">
+          <div class="col mb-3">
+            <label for="challenge_id">Desafio</label>
+            <select class="form-control" id="challenge_id">
+              {{ range .Challenges }}
+                <option>{{ .Name }}</option>
+              {{ end }}
+            </select>
+            <div class="invalid-feedback">
+              Entre o número do desafio.
+            </div>
+          </div>
+          <div class="col mb-3">
+            <label for="username">Usuário Github</label>
+            <input type="text" class="form-control" id="username" placeholder="Seu username no github" required>
+            <div class="invalid-feedback">
+              Entre o seu username no github.
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="col mb-3">
+            <label for="solution">Paste da solução</label>
+            <textarea class="form-control" id="solution" rows="6" placeholder="Faça aqui o paste da sua solução" required></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Enviar</button>
+      </form>
+      <p>
+
+      <!-- results -->
+      <div class="alert alert-success" id="results_ok" style="display:none;"></div>
+      <div class="alert alert-danger" id="results_bad" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Disable form submissions if there are invalid fields.
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+              // Fetch all the forms we want to apply custom Bootstrap validation styles to
+              var forms = document.getElementsByClassName('needs-validation');
+              // Loop over them and prevent submission
+              var validation = Array.prototype.filter.call(forms, function(form) {
+                      form.addEventListener('submit', function(event) {
+                                if (form.checkValidity() === false) {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                          }
+                                form.classList.add('was-validated');
+                              }, false);
+                    });
+            }, false);
+    })();
+  </script>
+
+  <script>
+    function validateChallenge(obj) {
+      // Ignore invalid forms.
+      if (obj.checkValidity() === false) {
+        return;
+      }
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "{{ .ValidateURL }}", true);
+
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4) {
+          var res = JSON.parse(this.responseText);
+          var eid = "results_ok";
+          var msg = `
+<h4 style="alert-heading">Congratulações!</h4> <p>A sua solução está correta!
+Para enviar o resultado do seu desafio de volta para o site, crie um arquivo
+chamado <tt>.valid</tt> no diretório do seu desafio contendo o token <tt>
+${res.token}</tt>.  Use os comandos abaixo como referência:
+<pre>
+$ echo ${res.token} >.valid
+$ git add &lt;arquivos_fonte_da_sua_solução&gt;...
+$ git add .valid
+$ git commit -m 'Solução do desafio XX.'
+</pre>
+Em seguida, envie seu commit para o github com o <tt>git push</tt>e abra o PR
+normalmente. Verifique a validação do PR no Github e tenha certeza de que o
+resultado foi OK. Em caso de discrepância, contate um dos admins.`;
+
+          if (this.status == 200) {
+            if (res.valid == 0) {
+              eid = "results_bad";
+              msg = "OOPS! Resultado incorreto. Tente novamente. :)";
+            }
+          } else {
+            eid = "results_bad";
+            msg = "Erro interno. Por favor tente novamente mais tarde.";
+          }
+
+          document.getElementById("results_ok").style.display = "none";
+          document.getElementById("results_bad").style.display = "none";
+
+          document.getElementById(eid).style.display = "block";
+          document.getElementById(eid).innerHTML = msg;
+        }
+      };
+      challenge_id = document.getElementById("challenge_id").value;
+      username = document.getElementById("username").value;
+      solution = document.getElementById("solution").value;
+      xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhttp.send("challenge_id=" + challenge_id + "&username=" + username + "&solution=" + solution);
+    }
+  </script>
+  <script src="http://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="http://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>
+</html>
