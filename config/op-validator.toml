@@ -1,0 +1,25 @@
+# Secret is used to calculate the hash, together with the supplied username.
+# MAKE SURE YOU CHANGE THIS TO SOMETHING ELSE BEFORE MOVING TO PRODUCTION.
+secret = "CHANGE THIS TO SOMETHING ELSE!"
+
+# Individual results for each challenge.
+# Use the usual toml notation for simple values: "answer"
+# Or use the triple single-quote notation for multi-line answers.
+# Please note that leading/trailing blank lines on the entire answer,
+# as well as leading/trailing whitespaces on each line are ignored for
+# effects of comparison.
+[[result]]
+  name = 'desafio-100'
+  output = '''
+aaa
+bbb
+ccc
+'''
+
+[[result]]
+  name = 'desafio-101'
+  output = "42"
+
+[[result]]
+  name = 'desafio-102'
+  output = "foobar"
