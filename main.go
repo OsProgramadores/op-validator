@@ -99,13 +99,15 @@ func trimSlash(s string) string {
 // sanitize cleans the (possibly) multi-line string to remove common problems
 // such as trailing spaces and blank lines at the beginning or end.
 func sanitize(str string) string {
+	blanks := "\n\t\r "
+
 	// Remove all leading & trailing spaces, tabs & newlines
-	str = strings.Trim(str, "\n\t ")
+	str = strings.Trim(str, blanks)
 	sl := strings.Split(str, "\n")
 
 	var ret []string
 	for _, s := range sl {
-		ret = append(ret, strings.Trim(s, "\n\t "))
+		ret = append(ret, strings.Trim(s, blanks))
 	}
 	return strings.Join(ret, "\n")
 }
