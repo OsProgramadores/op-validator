@@ -63,7 +63,7 @@
       <p>
 
       <!-- results -->
-      <div class="alert alert-success" id="results_ok" style="display:none;"></div>
+      <div class="alert alert-success" id="results_good" style="display:none;"></div>
       <div class="alert alert-danger" id="results_bad" style="display:none;"></div>
     </div>
   </div>
@@ -96,13 +96,27 @@
         return;
       }
       var xhttp = new XMLHttpRequest();
-      xhttp.open("POST", "{{ .CheckURL }}", true);
+      try {
+        xhttp.open("POST", "{{ .CheckURL }}", true);
+      } catch(err) {
+        badresult("XMLHttpRequest open error: " + err.description);
+        return;
+      }
 
+      // Process on return.
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
-          var res = JSON.parse(this.responseText);
-          var eid = "results_ok";
+          // Parse incoming JSON.
+          var res;
+          try {
+            res = JSON.parse(this.responseText);
+          } catch(err) {
+            badresult(`Erro interno (JSON parsing): ${err.description}. Por favor tente novamente mais tarde.`);
+            return;
+          }
+
           var msg = `
+
 <h4 style="alert-heading">Congratulações!</h4> <p>A sua solução está correta!
 Para enviar o resultado do seu desafio de volta para o site, crie um arquivo
 chamado <tt>.valid</tt> no diretório do seu desafio contendo o token <tt>
@@ -117,31 +131,52 @@ Em seguida, envie seu commit para o github com o <tt>git push</tt>e abra o PR
 normalmente. Verifique a validação do PR no Github e tenha certeza de que o
 resultado foi OK. Em caso de discrepância, contate um dos admins.`;
 
-          if (this.status == 200) {
-            if (res.valid == 0) {
-              eid = "results_bad";
-              msg = "OOPS! Resultado incorreto. Tente novamente. :)";
-            }
-          } else {
-            eid = "results_bad";
-            msg = "Erro interno. Por favor tente novamente mais tarde.";
+          if (this.status == 200 && res.valid == 0) {
+            badresult("OOPS! Resultado incorreto. Tente novamente. :)");
+            return;
           }
 
-          document.getElementById("results_ok").style.display = "none";
-          document.getElementById("results_bad").style.display = "none";
+          if (this.status != 200) {
+            badresult(`Erro interno (HTTP ${this.status}). Por favor tente novamente mais tarde.`);
+          }
 
-          document.getElementById(eid).style.display = "block";
-          document.getElementById(eid).innerHTML = msg;
+          goodresult(msg);
         }
       };
+
       challenge_id = document.getElementById("challenge_id").value;
       username = document.getElementById("username").value;
       solution = document.getElementById("solution").value;
       xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-      xhttp.send("challenge_id=" + challenge_id + "&username=" + username + "&solution=" + solution);
+
+      try {
+        xhttp.send("challenge_id=" + challenge_id + "&username=" + username + "&solution=" + solution);
+      } catch(err) {
+        badresult(`Erro interno no envio de dados (HTTP ${this.status}). Por favor tente novamente mais tarde.`);
+      }
+    }
+
+    // Display a bad results/error box.
+    function badresult(str) {
+      document.getElementById("results_bad").innerHTML = str;
+      document.getElementById("results_bad").style.display = "block";
+      document.getElementById("results_good").style.display = "none";
+      return;
+    }
+
+    // Display a good results box.
+    function goodresult(str) {
+      document.getElementById("results_good").innerHTML = str;
+      document.getElementById("results_bad").style.display = "none";
+      document.getElementById("results_good").style.display = "block";
+      return;
     }
   </script>
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.min.js">
 </body>
 </html>
+
+<!--
+vim: ts=2:sw=2:smarttab:expandtab
+-->
