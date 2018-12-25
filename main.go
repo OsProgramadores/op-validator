@@ -18,6 +18,9 @@ import (
 const (
 	// Path for the result checker handler.
 	checkPath = "/check"
+
+	// Path for the verify-token handler.
+	verifyTokenPath = "/verify-token"
 )
 
 // Page holds values to be passed to the page templates.
@@ -75,6 +78,41 @@ func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Print(m)
+}
+
+// validateTokenHandler validates the incoming token. It returns HTTP 200 if the token is valid
+// or 400 if the token is invalid.
+func (x *Server) verifyTokenHandler(w http.ResponseWriter, r *http.Request) {
+	// Form data.
+	challengeID := sanitize(r.PostFormValue("challenge_id"))
+	username := sanitize(r.PostFormValue("username"))
+	token := sanitize(r.PostFormValue("token"))
+
+	log.Printf("Token validation: Got challenge: %q, username: %q, token: %q", challengeID, username, token)
+	// Basic validation of fields.
+	if challengeID == "" || username == "" || token == "" {
+		log.Printf("Missing parameters: Challenge: %q, user: %q, token: %q", challengeID, username, token)
+		http.Error(w, "Missing parameters", http.StatusBadRequest)
+		return
+	}
+
+	// Find results for this challenge.
+	result, ok := findResult(x.page.Results, challengeID)
+	if !ok {
+		log.Printf("Invalid challenge. Challenge: %q, user: %q", challengeID, username)
+		http.Error(w, "Invalid challenge", http.StatusBadRequest)
+		return
+	}
+
+	goodToken := createToken(username, x.secret, sanitize(result.Output))
+
+	if token != goodToken {
+		log.Printf("Invalid token. Got %q wanted %q", token, goodToken)
+		http.Error(w, "Invalid token", http.StatusBadRequest)
+		return
+	}
+	log.Printf("Good token. Challenge: %q, username: %q, token: %q", challengeID, username, token)
+	http.Error(w, "OK", http.StatusOK)
 }
 
 // findResult finds a given result in the slice of Result structures. Returns
@@ -170,6 +208,7 @@ func main() {
 	// Handlers paths MUST end in /
 	http.HandleFunc(u.EscapedPath()+"/", srv.rootHandler)
 	http.HandleFunc(u.EscapedPath()+checkPath+"/", srv.checkHandler)
+	http.HandleFunc(u.EscapedPath()+verifyTokenPath+"/", srv.verifyTokenHandler)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *optPort), nil))
 }
