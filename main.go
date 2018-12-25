@@ -46,9 +46,9 @@ func (x *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
 // checkHandler validates the incoming request and returns a JSON
 // struct containing the validation status and the token, if valid.
 func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
-	challengeID := r.PostFormValue("challenge_id")
-	username := r.PostFormValue("username")
-	solution := r.PostFormValue("solution")
+	challengeID := sanitize(r.PostFormValue("challenge_id"))
+	username := sanitize(r.PostFormValue("username"))
+	solution := sanitize(r.PostFormValue("solution"))
 
 	fmt.Printf("[%s] [%s] [%s]\n", challengeID, username, solution)
 
@@ -71,6 +71,20 @@ func trimSlash(s string) string {
 		return s[:len(s)-1]
 	}
 	return s
+}
+
+// sanitize cleans the (possibly) multi-line string to remove common problems
+// such as trailing spaces and blank lines at the beginning or end.
+func sanitize(str string) string {
+	// Remove all leading & trailing spaces, tabs & newlines
+	str = strings.Trim(str, "\n\t ")
+	sl := strings.Split(str, "\n")
+
+	var ret []string
+	for _, s := range sl {
+		ret = append(ret, strings.Trim(s, "\n\t "))
+	}
+	return strings.Join(ret, "\n")
 }
 
 func main() {
@@ -105,7 +119,8 @@ func main() {
 		},
 	}
 
-	log.Printf("Serving on port %d, using XML URL %q", *optPort, *optURL)
+	log.Printf("Serving on port %d", *optPort)
+	log.Printf("Javascript will use XML URL: %s", *optURL)
 
 	// Handlers paths MUST end in /
 	http.HandleFunc(u.EscapedPath()+"/", srv.rootHandler)
