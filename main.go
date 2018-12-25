@@ -34,14 +34,11 @@ type Page struct {
 
 // Server holds database and other information about this server.
 type Server struct {
-	// page holds information required by templates.
-	page Page
-
-	// Secret (used to compute the result hash.)
+	page   Page
 	secret string
 }
 
-// rootHandler always returns an error since we have no API endpoints here.
+// rootHandler serves the template to the user.
 func (x *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
 	err := rootTemplate.ExecuteTemplate(w, "validate.html", x.page)
 	if err != nil {
@@ -49,8 +46,9 @@ func (x *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// checkHandler validates the incoming request and returns a JSON
-// struct containing the validation status and the token, if valid.
+// checkHandler validates the incoming request (usually a XMLHttpRequest from
+// the javascript served by the template) and returns a JSON struct containing
+// the validation status and the token, if valid.
 func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
 	// Form data.
 	challengeID := sanitize(r.PostFormValue("challenge_id"))
