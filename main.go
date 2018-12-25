@@ -20,10 +20,6 @@ const (
 	checkPath = "/check"
 )
 
-var (
-	rootTemplate = template.Must(template.ParseFiles("templates/validate.html"))
-)
-
 // Page holds values to be passed to the page templates.
 type Page struct {
 	CheckURL string
@@ -34,13 +30,14 @@ type Page struct {
 
 // Server holds database and other information about this server.
 type Server struct {
-	page   Page
-	secret string
+	page         Page
+	secret       string
+	rootTemplate *template.Template
 }
 
 // rootHandler serves the template to the user.
 func (x *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
-	err := rootTemplate.ExecuteTemplate(w, "validate.html", x.page)
+	err := x.rootTemplate.ExecuteTemplate(w, "validate.html", x.page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -148,6 +145,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Initialize Template.
+	rootTemplate, err := template.ParseFiles("templates/validate.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Create a new server object with the page parameters.
 	srv := &Server{
 		page: Page{
@@ -155,7 +158,8 @@ func main() {
 			CheckURL: fmt.Sprintf("%s%s/", *optURL, checkPath),
 			Results:  config.Results,
 		},
-		secret: config.Secret,
+		secret:       config.Secret,
+		rootTemplate: rootTemplate,
 	}
 
 	log.Printf("Serving on port %d", *optPort)
