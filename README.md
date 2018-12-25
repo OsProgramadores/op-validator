@@ -1,6 +1,6 @@
 # op-validator
 
-## Synopsys
+## Synopsis
 
 A challenge/exercise validator for the programming challenges in
 [osprogramadores.com](https://osprogramadores.com).
