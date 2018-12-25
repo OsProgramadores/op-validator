@@ -1,10 +1,12 @@
 // op-validator: Challenge validator for osprogramadores.com
+
 package main
 
 import (
-	//"crypto/sha1"
+	"crypto/md5"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -32,7 +34,11 @@ type Page struct {
 
 // Server holds database and other information about this server.
 type Server struct {
+	// page holds information required by templates.
 	page Page
+
+	// Secret (used to compute the result hash.)
+	secret string
 }
 
 // rootHandler always returns an error since we have no API endpoints here.
@@ -46,23 +52,45 @@ func (x *Server) rootHandler(w http.ResponseWriter, r *http.Request) {
 // checkHandler validates the incoming request and returns a JSON
 // struct containing the validation status and the token, if valid.
 func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
+	// Form data.
 	challengeID := sanitize(r.PostFormValue("challenge_id"))
 	username := sanitize(r.PostFormValue("username"))
 	solution := sanitize(r.PostFormValue("solution"))
 
-	fmt.Printf("[%s] [%s] [%s]\n", challengeID, username, solution)
+	log.Printf("Got challenge: %q, username: %q", challengeID, username)
 
-	/*
-		switch {
-		case err != nil:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		default:
-			count++
+	// Find corresponding result in the configuration.
+	result, ok := findResult(x.page.Results, challengeID)
+	if !ok {
+		log.Printf("Unable to find challenge %q in config for user %q", challengeID, username)
+		http.Error(w, fmt.Sprintf("Desafio inválido: %s", challengeID), http.StatusInternalServerError)
+		return
+	}
+
+	good := sanitize(result.Output)
+
+	// Log result comparison
+	m := fmt.Sprintf("Username: %q, got solution %q, want %q", username, solution, good)
+	if solution == good {
+		m += " (GOOD)"
+		fmt.Fprintf(w, `{ "valid":"1", "token": %q }`, createToken(username, x.secret, solution))
+	} else {
+		m += " (BAD)"
+		fmt.Fprintf(w, `{ "valid":"0", "token": "" }`)
+	}
+
+	log.Print(m)
+}
+
+// findResult finds a given result in the slice of Result structures. Returns
+// the result and true if found, blank and false otherwise.
+func findResult(results []Result, name string) (Result, bool) {
+	for _, result := range results {
+		if result.Name == name {
+			return result, true
 		}
-	*/
-
-	fmt.Fprintf(w, `{ "valid":"1", "token": "87236421487264641914" }`)
+	}
+	return Result{}, false
 }
 
 // trimSlash returns a copy of the string without a trailing slash.
@@ -85,6 +113,18 @@ func sanitize(str string) string {
 		ret = append(ret, strings.Trim(s, "\n\t "))
 	}
 	return strings.Join(ret, "\n")
+}
+
+// createToken creates a token based on the username, a secret, and the result
+// and returns a printable representation of the token.
+func createToken(username, secret, result string) string {
+	h := md5.New()
+	io.WriteString(h, username)
+	io.WriteString(h, secret)
+	io.WriteString(h, result)
+
+	// Always use 1 as the prefix (v1)
+	return fmt.Sprintf("1%x", h.Sum(nil))
 }
 
 func main() {
@@ -117,6 +157,7 @@ func main() {
 			CheckURL: fmt.Sprintf("%s%s/", *optURL, checkPath),
 			Results:  config.Results,
 		},
+		secret: config.Secret,
 	}
 
 	log.Printf("Serving on port %d", *optPort)
