@@ -164,8 +164,6 @@ func createToken(username, secret, result string) string {
 
 func main() {
 	optConfig := flag.String("config", "config/op-validator.toml", "Config file name.")
-	optPort := flag.Int("port", 40000, "HTTP server port to listen on.")
-	optURL := flag.String("base-url", "", "Base URL for the XMLHttpRequests (from JS).")
 	flag.Parse()
 
 	// Open and parse config file.
@@ -179,8 +177,7 @@ func main() {
 	}
 
 	// Remove any extra slashes from the base URL, making processing consistent.
-	*optURL = trimSlash(*optURL)
-	u, err := url.Parse(*optURL)
+	u, err := url.Parse(config.BaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -195,20 +192,20 @@ func main() {
 	srv := &Server{
 		page: Page{
 			// This is the full location where XMLHttpRequests will be sent.
-			CheckURL: fmt.Sprintf("%s%s/", *optURL, checkPath),
+			CheckURL: fmt.Sprintf("%s%s/", config.BaseURL, checkPath),
 			Results:  config.Results,
 		},
 		secret:       config.Secret,
 		rootTemplate: rootTemplate,
 	}
 
-	log.Printf("Serving on port %d", *optPort)
-	log.Printf("Javascript will use XML URL: %s", *optURL)
+	log.Printf("Serving on port %d", config.Port)
+	log.Printf("Javascript will use XML URL: %s", config.BaseURL)
 
 	// Handlers paths MUST end in /
 	http.HandleFunc(u.EscapedPath()+"/", srv.rootHandler)
 	http.HandleFunc(u.EscapedPath()+checkPath+"/", srv.checkHandler)
 	http.HandleFunc(u.EscapedPath()+verifyTokenPath+"/", srv.verifyTokenHandler)
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *optPort), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }

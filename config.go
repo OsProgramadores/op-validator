@@ -7,6 +7,11 @@ import (
 	"io/ioutil"
 )
 
+const (
+	defaultPort    = 40000
+	defaultBaseURL = "http://localhost"
+)
+
 // Result holds the correct result hash for each challenge.
 type Result struct {
 	Name   string `toml:"name"`
@@ -21,6 +26,12 @@ type Config struct {
 	// of this to the repo).
 	Secret  string   `toml:"secret"`
 	Results []Result `toml:"result"`
+
+	// HTTP port to listen on.
+	Port int `toml:"port"`
+
+	// Base URL for the XMLHttpRequests (from JS).
+	BaseURL string `toml:"base_url"`
 }
 
 // parseConfig parses the configuration string from the slice of bytes
@@ -37,9 +48,20 @@ func parseConfig(r io.Reader) (Config, error) {
 		return Config{}, err
 	}
 
+	// Defaults
+	if config.Port == 0 {
+		config.Port = defaultPort
+	}
+	if config.BaseURL == "" {
+		config.BaseURL = defaultBaseURL
+	}
+
 	if config.Secret == "" {
 		return Config{}, errors.New("Fatal: Secret is empty")
 	}
+
+	// Make input consistent.
+	config.BaseURL = trimSlash(config.BaseURL)
 
 	return config, nil
 }
