@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	defaultPort    = 40000
-	defaultBaseURL = "http://localhost"
+	defaultPort         = 40000
+	defaultBaseURL      = "http://localhost"
+	defaultTemplatesDir = "./templates"
 )
 
 // Result holds the correct result hash for each challenge.
@@ -32,6 +33,9 @@ type Config struct {
 
 	// Base URL for the XMLHttpRequests (from JS).
 	BaseURL string `toml:"base_url"`
+
+	// Directory for templates.
+	TemplatesDir string `toml:"templates_dir"`
 }
 
 // parseConfig parses the configuration string from the slice of bytes
@@ -54,6 +58,9 @@ func parseConfig(r io.Reader) (Config, error) {
 	}
 	if config.BaseURL == "" {
 		config.BaseURL = defaultBaseURL
+	}
+	if config.TemplatesDir == "" {
+		config.BaseURL = defaultTemplatesDir
 	}
 
 	if config.Secret == "" {

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 )
@@ -183,7 +184,7 @@ func main() {
 	}
 
 	// Initialize Template.
-	rootTemplate, err := template.ParseFiles("templates/validate.html")
+	rootTemplate, err := template.ParseFiles(filepath.Join(config.TemplatesDir, "validate.html"))
 	if err != nil {
 		log.Fatal(err)
 	}
