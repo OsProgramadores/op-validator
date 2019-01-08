@@ -81,28 +81,13 @@ func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print(m)
 }
 
-// formValues reads the ChallengeID, username, and token from the form.
-func formValues(r *http.Request) (string, string, string, error) {
-	var fv []string
-
-	for _, field := range []string{"challengeID", "username", "token"} {
-		v, err := url.QueryUnescape(r.PostFormValue(field))
-		if err != nil {
-			return "", "", "", fmt.Errorf("form decode error in %q: %v", field, err)
-		}
-		fv = append(fv, sanitize(v))
-	}
-	return fv[0], fv[1], fv[2], nil
-}
-
 // validateTokenHandler validates the incoming token. It returns HTTP 200 if the token is valid
 // or 400 if the token is invalid.
 func (x *Server) verifyTokenHandler(w http.ResponseWriter, r *http.Request) {
-	challengeID, username, token, err := formValues(r)
-	if err != nil {
-		log.Printf("Form error: %v", err)
-		http.Error(w, "Form decoding error", http.StatusBadRequest)
-	}
+	// Form data.
+	challengeID := sanitize(r.PostFormValue("challenge_id"))
+	username := sanitize(r.PostFormValue("username"))
+	token := sanitize(r.PostFormValue("token"))
 
 	log.Printf("Token validation: Got challenge: %q, username: %q, token: %q", challengeID, username, token)
 	// Basic validation of fields.
