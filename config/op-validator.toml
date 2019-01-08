@@ -2,12 +2,19 @@
 # MAKE SURE YOU CHANGE THIS TO SOMETHING ELSE BEFORE MOVING TO PRODUCTION.
 secret = "CHANGE THIS TO SOMETHING ELSE!"
 
-# TCP port to listen on
+# TCP port to listen on. This does not change the URL used to make requests.
+# Make sure base_url (below) reflects your full URL. This "split setup" allows
+# the program to listen on a port and use a different external URL (usually
+# reverse-proxied).
 port = 40000
 
-# Base URL. All other URLs will be under this. This is particularly useful when
-# using a reverse proxy to direct outside traffic to the TCP port above.
-base_url = "https://yoursite.com/baseurl"
+# Base URL defines the base URL to be used for all requests. Change this to
+# your domain and path. Include a port if this URL is to be accessed on a
+# non-standard port.
+base_url = "http://localhost:40000"
+
+# Location of templates.
+templates_dir = "./templates"
 
 # Individual results for each challenge.
 # Use the usual toml notation for simple values: "answer"
