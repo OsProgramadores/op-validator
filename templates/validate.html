@@ -150,7 +150,7 @@ resultado foi OK. Em caso de discrepância, contate um dos admins.`;
       xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
       try {
-        xhttp.send("challenge_id=" + challenge_id + "&username=" + username + "&solution=" + solution);
+        xhttp.send("challenge_id=" + encodeURIComponent(challenge_id) + "&username=" + encodeURIComponent(username) + "&solution=" + encodeURIComponent(solution));
       } catch(err) {
         badresult(`Erro interno no envio de dados (HTTP ${this.status}). Por favor tente novamente mais tarde.`);
       }
