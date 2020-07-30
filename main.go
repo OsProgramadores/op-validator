@@ -190,7 +190,7 @@ func validKnights(solution string) bool{
 		if col < 0 {col = 0 - col}
 		row = int(step[1]) - int(prevStep[1])
 		if row < 0 {row = 0 - row}
-		if col * row = 0 {return false} // prevent 0 3 moves 
+		if col * row == 0 {return false} // prevent 0 3 moves 
 		if col + row != 3 { return false }
 		prevStep = step
 	}
