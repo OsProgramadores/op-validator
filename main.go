@@ -169,7 +169,6 @@ func validKnights(solution string) bool{
 	sl := strings.Split(solution, "\n")
 	var prevStep string = sl[0]
 	var row,col int
-	//blanks := "\n\t\r "
 
 	// a valid solution must have 64 steps
 	if len(sl) != Steps {return false}
@@ -185,12 +184,22 @@ func validKnights(solution string) bool{
 		if !(step[0] >= 'a' && step[0] <= 'h' && step[1] >= '1' && step[1] <= '8') {return false}
 	}
 	// verify if the move is valid from previous one
+	// valid moves are:
+	//	 1, 2
+	//	 2, 1
+	//	 1,-2
+	//	 2,-1
+	//	-1, 2
+	//	-2, 1
+	//	-1,-2
+	//	-2,-1
+	// the sum of abs values of the valid moves are always 3
 	for _, step := range sl[1:] {
 		col = int(step[0]) - int(prevStep[0])
 		if col < 0 {col = 0 - col}
 		row = int(step[1]) - int(prevStep[1])
 		if row < 0 {row = 0 - row}
-		if col * row == 0 {return false} // prevent 0 3 moves 
+		if col < 1 || col > 2 {return false}// prevent invalid moves which sum results 3
 		if col + row != 3 { return false }
 		prevStep = step
 	}
