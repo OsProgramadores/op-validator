@@ -37,3 +37,6 @@ ccc
 [[result]]
   name = 'desafio-102'
   output = "foobar"
+[[result]]
+  name = 'desafio-13'
+  output = "validKnightsD13"

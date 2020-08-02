@@ -54,10 +54,8 @@ func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
 	// Form data.
 	challengeID := sanitize(r.PostFormValue("challenge_id"))
 	username := sanitize(r.PostFormValue("username"))
-	solution := sanitize(r.PostFormValue("solution"))
-
+	solution := customTester(challengeID, sanitize(r.PostFormValue("solution")))
 	log.Printf("Got challenge: %q, username: %q", challengeID, username)
-
 	// Find corresponding result in the configuration.
 	result, ok := findResult(x.page.Results, challengeID)
 	if !ok {
@@ -149,6 +147,18 @@ func sanitize(str string) string {
 		ret = append(ret, strings.Trim(s, blanks))
 	}
 	return strings.Join(ret, "\n")
+}
+
+// customTester executes custom tests for specific challenges
+// such as those which have many solutions.
+func customTester(challengeID string, solution string) string {
+	if challengeID == "desafio-13" {
+		if validKnightsD13(solution) {
+			return "validKnightsD13"
+		}
+		return "notValidSolution"
+	}
+	return solution
 }
 
 // createToken creates a token based on the username, a secret, and the result
