@@ -39,4 +39,4 @@ ccc
   output = "foobar"
 [[result]]
   name = 'desafio-13'
-  output = "ok"
+  output = "validKnightsD13"

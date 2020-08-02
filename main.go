@@ -149,61 +149,16 @@ func sanitize(str string) string {
 	return strings.Join(ret, "\n")
 }
 
-// execute custom tests for specific challenges
-// such as those which have many solutions
+// customTester executes custom tests for specific challenges
+// such as those which have many solutions.
 func customTester(challengeID string, solution string) string {
 	if challengeID == "desafio-13" {
-		if validKnights(solution) {
-			return "ok"
-		}else{
-			return "not ok"
+		if validKnightsD13(solution) {
+			return "validKnightsD13"
 		}
-	}else {
-		return solution
+		return "notValidSolution"
 	}
-}
-
-// check for a valid solution for knight's tour
-func validKnights(solution string) bool{
-	const Steps = 64 // must be 64 for a 8x8 table
-	sl := strings.Split(solution, "\n")
-	var prevStep string = sl[0]
-	var row,col int
-
-	// a valid solution must have 64 steps
-	if len(sl) != Steps {return false}
-	// a valid solution must not have duplicated entries
-	//var test string
-	for i, step := range sl {
-		for j, test_step := range sl{
-			if step == test_step && i != j {return false}
-		}
-	}
-	// test limits of table
-	for _, step := range sl {
-		if !(step[0] >= 'a' && step[0] <= 'h' && step[1] >= '1' && step[1] <= '8') {return false}
-	}
-	// verify if the move is valid from previous one
-	// valid moves are:
-	//	 1, 2
-	//	 2, 1
-	//	 1,-2
-	//	 2,-1
-	//	-1, 2
-	//	-2, 1
-	//	-1,-2
-	//	-2,-1
-	// the sum of abs values of the valid moves are always 3
-	for _, step := range sl[1:] {
-		col = int(step[0]) - int(prevStep[0])
-		if col < 0 {col = 0 - col}
-		row = int(step[1]) - int(prevStep[1])
-		if row < 0 {row = 0 - row}
-		if col < 1 || col > 2 {return false}// prevent invalid moves which sum results 3
-		if col + row != 3 { return false }
-		prevStep = step
-	}
-	return true
+	return solution
 }
 
 // createToken creates a token based on the username, a secret, and the result
