@@ -1,0 +1,35 @@
+name: Check Code
+on: [pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14.x
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Install Go dependencies
+        run: |
+          go get -t ./...
+          go get -u golang.org/x/lint/golint
+
+      - name: Check code formatting
+        run: |
+          TMPFILE=$(mktemp)
+          find . -type f -name '*.go' -exec gofmt -s -l {} \; >"$TMPFILE"
+          if grep -q . "$TMPFILE"; then
+            echo "ERROR: The following files need formatting with gofmt -s:"
+            cat $TMPFILE
+            exit 1
+          fi
+
+      - name: Go linter & static analysis
+        run: |
+          golint
+          go vet
