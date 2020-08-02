@@ -54,7 +54,7 @@ func (x *Server) checkHandler(w http.ResponseWriter, r *http.Request) {
 	// Form data.
 	challengeID := sanitize(r.PostFormValue("challenge_id"))
 	username := sanitize(r.PostFormValue("username"))
-	solution := customTester(challengeID,sanitize(r.PostFormValue("solution")))
+	solution := customTester(challengeID, sanitize(r.PostFormValue("solution")))
 	log.Printf("Got challenge: %q, username: %q", challengeID, username)
 	// Find corresponding result in the configuration.
 	result, ok := findResult(x.page.Results, challengeID)
