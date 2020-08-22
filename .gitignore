@@ -1,15 +1,10 @@
-# Trick to ignore files without extension (binary)
-*
-!/**/
-!*.*
-!LICENSE
-
 # Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+op-validator
 
 # Test binary, build with `go test -c`
 *.test
